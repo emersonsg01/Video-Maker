@@ -1,0 +1,12 @@
+{
+  "bin": "index.js",
+  "assets": [
+    "public/**/*",
+    "src/**/*",
+    "node_modules/**/*"
+  ],
+  "targets": [
+    "node16-win-x64"
+  ],
+  "outputPath": "dist"
+}

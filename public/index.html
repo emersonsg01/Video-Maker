@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Maker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 2rem;
+        }
+        .main-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .btn-primary {
+            background-color: #4361ee;
+            border-color: #4361ee;
+        }
+        .btn-primary:hover {
+            background-color: #3a56d4;
+            border-color: #3a56d4;
+        }
+        .progress {
+            margin-top: 1rem;
+            display: none;
+        }
+        #result {
+            margin-top: 2rem;
+            display: none;
+        }
+        .video-container {
+            margin-top: 1rem;
+        }
+        .alert {
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container main-container">
+        <div class="header">
+            <h1>Video Maker</h1>
+            <p class="lead">Create videos automatically using AI and content search</p>
+        </div>
+
+        <form id="videoForm">
+            <div class="form-group">
+                <label for="description" class="form-label">Video Description</label>
+                <textarea class="form-control" id="description" name="description" rows="4" placeholder="Describe what you want your video to be about..." required></textarea>
+                <div class="form-text">Be descriptive to get better results. The AI will analyze your text to find relevant content.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="localFiles" class="form-label">Upload Local Media (Optional)</label>
+                <input type="file" class="form-control" id="localFiles" name="localFiles" multiple accept="image/*,video/*">
+                <div class="form-text">You can upload your own images and videos to include in the final video.</div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100">Create Video</button>
+
+            <div class="progress">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+            </div>
+        </form>
+
+        <div id="result">
+            <div class="alert alert-success">
+                <h4>Video Created Successfully!</h4>
+                <p>Your video has been created and is ready to view.</p>
+            </div>
+            <div class="video-container">
+                <video id="resultVideo" controls class="w-100"></video>
+            </div>
+            <a id="downloadLink" class="btn btn-success mt-3 w-100">Download Video</a>
+        </div>
+
+        <div id="error" class="alert alert-danger mt-3" style="display: none;"></div>
+    </div>
+
+    <script>
+        document.getElementById('videoForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Show progress
+            const progressBar = document.querySelector('.progress');
+            const progressBarInner = document.querySelector('.progress-bar');
+            progressBar.style.display = 'flex';
+            progressBarInner.style.width = '0%';
+            
+            // Hide previous results and errors
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            
+            try {
+                const formData = new FormData(this);
+                
+                // Simulate progress (since we don't have real-time progress)
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += 5;
+                    if (progress > 90) {
+                        clearInterval(progressInterval);
+                    }
+                    progressBarInner.style.width = progress + '%';
+                    progressBarInner.setAttribute('aria-valuenow', progress);
+                }, 1000);
+                
+                // Send request to create video
+                const response = await fetch('/api/create-video', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                clearInterval(progressInterval);
+                progressBarInner.style.width = '100%';
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Show result
+                    document.getElementById('result').style.display = 'block';
+                    
+                    // Set video source
+                    const videoPath = result.videoPath.replace(/\\/g, '/');
+                    const videoElement = document.getElementById('resultVideo');
+                    videoElement.src = videoPath;
+                    
+                    // Set download link
+                    const downloadLink = document.getElementById('downloadLink');
+                    downloadLink.href = videoPath;
+                    downloadLink.download = videoPath.split('/').pop();
+                } else {
+                    throw new Error(result.error || 'Unknown error occurred');
+                }
+            } catch (error) {
+                console.error('Error creating video:', error);
+                document.getElementById('error').textContent = 'Error: ' + error.message;
+                document.getElementById('error').style.display = 'block';
+            } finally {
+                // Hide progress after a short delay
+                setTimeout(() => {
+                    progressBar.style.display = 'none';
+                }, 500);
+            }
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
